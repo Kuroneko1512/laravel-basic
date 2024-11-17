@@ -21,11 +21,28 @@ class HomeController extends Controller
         $featuredProducts = $this->getFeaturedProducts(8);
         return view('client.shop-single',compact('featuredProducts'));
     }
-    public function list()
+    public function list(Request $request)
     {
-        // $featuredProducts = $this->getFeaturedProducts(8);
-        $listProducts = Product::orderBy('id', 'desc')->paginate(12);
-        return view('client.shop',compact('listProducts'));
+        $query = Product::query();
+        
+        // Định nghĩa các trường có thể sort
+        $sortableFields = [
+            'name' => 'name',
+            'price' => 'price',
+            'created_at' => 'created_at'
+            // Có thể thêm các trường mới vào đây
+        ];
+
+        // Xử lý sort
+        if ($request->has('sort') && array_key_exists($request->sort, $sortableFields)) {
+            $direction = $request->direction === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($sortableFields[$request->sort], $direction);
+        } else {
+            $query->orderBy('id', 'desc'); // Mặc định sắp xếp theo id giảm dần
+        }
+
+        $listProducts = $query->paginate(12);
+        return view('client.shop', compact('listProducts'));
     }
 
     private function getFeaturedProducts($count)
